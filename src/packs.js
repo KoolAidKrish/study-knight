@@ -15,12 +15,20 @@ const meowKnight = {
     idle: { src: 'idle.png', frames: 6, ms: 140 },
     run: { src: 'run.png', frames: 8, ms: 95 },
     jump: { src: 'jump.png', frames: 12, ms: 70, air: [3, 9] },
+    // Attacks are 48×32 cells with the body centred, so the sword can reach past the frame.
+    // "hit" is the frame where the blow lands.
+    attack1: { src: 'attack1.png', frames: 10, ms: 55, frameWidth: 48, frameHeight: 32, hit: 4 },
+    attack2: { src: 'attack2.png', frames: 4, ms: 90, frameWidth: 48, frameHeight: 32, hit: 2 },
   },
 };
 
-const skyLayers = (sky) => [0, 0.01, 0.06, 0.16, 0.42, 1].map((parallax, i) => ({
-  src: `${sky}/${i + 1}.png`, parallax, drift: i === 2 ? 5 : 0,
-}));
+// Six Four Skies layers plus a floor strip (Kenney Pixel Platformer tiles, recoloured per sky).
+const skyLayers = (sky) => [
+  ...[0, 0.01, 0.06, 0.16, 0.42, 1].map((parallax, i) => ({
+    src: `${sky}/${i + 1}.png`, parallax, drift: i === 2 ? 5 : 0,
+  })),
+  { src: `../floor/${sky}.png`, parallax: 1, y: 290 },
+];
 
 const glacialLayers = (pale) => [
   { src: pale ? 'sky_lightened.png' : 'sky.png', parallax: 0, drift: 0 },
@@ -52,7 +60,7 @@ export const BUILTIN = [
     type: 'background',
     name: 'Four Skies',
     base: 'assets/skies/',
-    groundY: 314,
+    groundY: 295,
     phases: ['sunrise', 'noon', 'sunset', 'night'].map((s) => ({
       name: s[0].toUpperCase() + s.slice(1), layers: skyLayers(s),
     })),
@@ -135,14 +143,13 @@ function recolor(img, { tints = [], replace = {} }) {
 export async function loadCharacter(pack) {
   if (!pack.anims?.idle || !pack.anims?.run) throw new Error(`${pack.name}: needs "idle" and "run" animations`);
   const anims = {};
-  let fh = 0;
   for (const [name, a] of Object.entries(pack.anims)) {
     let img = await loadImage(url(pack, a.src));
     if (pack.recolor) img = recolor(img, pack.recolor);
-    const vertical = a.vertical ?? (!a.frames && !pack.frameWidth && img.height > img.width);
+    let w = a.frameWidth ?? pack.frameWidth;
+    let h = a.frameHeight ?? pack.frameHeight;
+    const vertical = a.vertical ?? (!a.frames && !w && img.height > img.width);
     let frames = a.frames;
-    let w = pack.frameWidth;
-    let h = pack.frameHeight;
     if (vertical) {
       w ??= img.width;
       frames ??= Math.round(img.height / (h ?? w));
@@ -152,12 +159,12 @@ export async function loadCharacter(pack) {
       frames ??= Math.max(1, Math.round(img.width / (w ?? h)));
       w ??= Math.floor(img.width / frames);
     }
-    anims[name] = { img, frames, w, h, vertical, ms: a.ms ?? 100, air: a.air };
-    fh = Math.max(fh, h);
+    anims[name] = { img, frames, w, h, vertical, ms: a.ms ?? 100, air: a.air, hit: a.hit };
   }
   return {
     anims,
-    scale: pack.scale ?? Math.max(1, Math.round(48 / fh)),
+    // sized from the idle frame, so wide attack frames don't shrink the character
+    scale: pack.scale ?? Math.max(1, Math.round(48 / anims.idle.h)),
     feet: pack.feet ?? 0,                 // transparent rows under the feet, in frame pixels
     flip: pack.facing === 'left',
   };
@@ -168,7 +175,7 @@ export async function loadBackground(pack) {
   const phases = await Promise.all(pack.phases.map(async (ph) => ({
     name: ph.name,
     layers: await Promise.all(ph.layers.map(async (l) => ({
-      img: await loadImage(url(pack, l.src)), parallax: l.parallax ?? 0, drift: l.drift ?? 0,
+      img: await loadImage(url(pack, l.src)), parallax: l.parallax ?? 0, drift: l.drift ?? 0, y: l.y ?? 0,
     }))),
   })));
   const h = phases[0].layers[0].img.height;

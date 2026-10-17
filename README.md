@@ -71,10 +71,16 @@ For anything else, add a `manifest.json`:
   "anims": {
     "idle": { "src": "idle.png", "frames": 4, "ms": 150 },
     "run":  { "src": "run.png", "ms": 90 },
-    "jump": { "src": "jump.png", "air": [2, 5] }  // optional; "air" = frames spent off the ground
+    "jump": { "src": "jump.png", "air": [2, 5] }, // optional; "air" = frames spent off the ground
+    // optional; any anim named attack… is used on enemies. "hit" = frame where the blow lands.
+    // frameWidth/frameHeight can be set per animation when attack frames are wider.
+    "attack1": { "src": "slash.png", "frames": 6, "frameWidth": 48, "frameHeight": 32, "hit": 3 }
   }
 }
 ```
+
+Heroes without attack animations hop on enemies (if they have `jump`); with neither, enemies just poof
+on contact.
 
 ```jsonc
 // background
@@ -88,7 +94,8 @@ For anything else, add a `manifest.json`:
   "phases": [
     { "name": "Day", "layers": [
       { "src": "day/sky.png",   "parallax": 0 },              // 0 = static, 1 = moves with the runner
-      { "src": "day/dunes.png", "parallax": 0.4, "drift": 3 } // drift = px/s of motion of its own (clouds)
+      { "src": "day/dunes.png", "parallax": 0.4, "drift": 3 }, // drift = px/s of motion of its own (clouds)
+      { "src": "day/floor.png", "parallax": 1, "y": 150 }       // y = source px from the top (e.g. a ground strip)
     ] }
   ]
 }
@@ -100,5 +107,7 @@ Strips can also run top to bottom (`"vertical": true` on an animation). Layers s
 
 - Meow Knight character sprites
 - Four Skies parallax backgrounds
+- Enemies and the Four Skies floor: Kenney "Pixel Platformer" (https://kenney.nl), CC0. The floor is the
+  grass-top tile recoloured to each sky's forest palette.
 - Glacial Mountains parallax background by Vicente Nitti (@vnitti), CC BY 4.0
   (https://creativecommons.org/licenses/by/4.0/). Layers used as-is, scaled 2×.

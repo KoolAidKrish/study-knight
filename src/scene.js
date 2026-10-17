@@ -1,6 +1,8 @@
 // Pixel-art scene: the character runs through the focus background while you study
 // and rests by a campfire in the break background. Both, and the character, come from packs.
 
+import { Enemies } from './enemies.js';
+
 const H = 320;                 // logical height; width follows the window's aspect
 const RUN_SPEED = 62;          // foreground px/s
 const HERO_X = 0.56;           // fraction of width, clear of the HUD
@@ -26,11 +28,14 @@ export class Scene {
     this.phase = { trail: 0, camp: 0 };   // index, or 'cycle' to follow skyProgress
     this.last = performance.now();
     this.started = false;
+    this.enemies = new Enemies();
+    this.enemiesReady = false;
   }
 
   start() {
     if (this.started) return;
     this.started = true;
+    this.enemies.load().then(() => { this.enemiesReady = true; }).catch(() => {});
     this.resize();
     window.addEventListener('resize', () => this.resize());
     requestAnimationFrame((t) => this.frame(t));
@@ -63,6 +68,7 @@ export class Scene {
     if (wantScene !== this.scene) {
       this.pendingScene = wantScene;
       this.fadeDir = 1;
+      this.enemies.clear();
     }
     if (mode !== 'study') this.anim = 'idle';
   }
@@ -96,18 +102,23 @@ export class Scene {
     }
 
     const running = this.mode === 'study' && this.scene === 'trail';
-    if (running) {
+    const heroX = Math.round(this.canvas.width * HERO_X);
+    if (running && this.hero) {
       this.scroll += RUN_SPEED * dt;
       if (this.anim === 'idle') this.setAnim('run');
+      this.fight(heroX);
       this.nextJump -= dt;
-      if (this.nextJump <= 0 && this.anim === 'run') {
-        if (this.hero?.anims.jump) this.setAnim('jump');
+      if (this.nextJump <= 0 && this.anim === 'run' && !this.enemies.target(heroX)) {
+        if (this.hero.anims.jump) this.setAnim('jump');
         this.nextJump = 20 + Math.random() * 45;
       }
-      const a = this.hero?.anims[this.anim];
-      if (this.anim === 'jump' && a && this.animT >= a.frames * a.ms) this.setAnim('run');
+      const a = this.hero.anims[this.anim];
+      if (this.anim !== 'run' && a && this.animT >= a.frames * a.ms) this.setAnim('run');
     } else if (this.anim !== 'idle') {
       this.setAnim('idle');
+    }
+    if (this.enemiesReady && this.scene === 'trail') {
+      this.enemies.update(dt, { running, scrollSpeed: RUN_SPEED, heroX, width: this.canvas.width });
     }
 
     if (this.scene === 'camp') this.updateSparks(dt);
@@ -116,6 +127,25 @@ export class Scene {
   setAnim(name) {
     this.anim = name;
     this.animT = 0;
+    this.struck = false;
+  }
+
+  // Swing at whatever walks up. Characters without attack animations hop on it instead.
+  fight(heroX) {
+    const foe = this.enemies.target(heroX);
+    const attacks = Object.keys(this.hero.anims).filter((k) => k.startsWith('attack'));
+    const moves = attacks.length ? attacks : this.hero.anims.jump ? ['jump'] : [];
+    if (foe && this.anim === 'run' && foe.x - heroX < 64) {
+      if (!moves.length) return this.enemies.kill(foe);
+      this.setAnim(moves[Math.floor(Math.random() * moves.length)]);
+    }
+    const a = this.hero.anims[this.anim];
+    if (!moves.includes(this.anim) || this.struck || !a) return;
+    const hitFrame = a.hit ?? (this.anim === 'jump' && a.air ? a.air[1] - 1 : Math.floor(a.frames * 0.45));
+    if (this.animT >= hitFrame * a.ms) {
+      this.struck = true;
+      if (foe && foe.x - heroX < 80) this.enemies.kill(foe);
+    }
   }
 
   // ---------- drawing ----------
@@ -137,6 +167,7 @@ export class Scene {
     } else {
       if (bg.ledge) this.drawPath(bg.ground);
       this.drawHero(cx, bg.ground);
+      if (this.enemiesReady) this.enemies.draw(ctx, bg.ground, this.time);
     }
 
     if (this.fade > 0) {
@@ -154,7 +185,7 @@ export class Scene {
 
   drawPhase(ctx, bg, i) {
     for (const l of bg.phases[i].layers) {
-      this.tile(ctx, l.img, this.scroll * l.parallax + this.time * l.drift, -bg.cropY, bg.scale);
+      this.tile(ctx, l.img, this.scroll * l.parallax + this.time * l.drift, l.y * bg.scale - bg.cropY, bg.scale);
     }
   }
 

@@ -104,7 +104,7 @@ export function initScenery(scene) {
     t.imageSmoothingEnabled = false;
     for (const l of bg.phases[Math.min(phase, bg.phases.length - 1)].layers) {
       const w = l.img.width * bg.scale;
-      for (let x = 0; x < 640; x += w) t.drawImage(l.img, x, -bg.cropY, w, l.img.height * bg.scale);
+      for (let x = 0; x < 640; x += w) t.drawImage(l.img, x, l.y * bg.scale - bg.cropY, w, l.img.height * bg.scale);
     }
     const c = cv.getContext('2d');
     c.imageSmoothingEnabled = true;
