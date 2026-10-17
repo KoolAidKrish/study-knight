@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Knight</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+
+  <header class="titlebar">
+    <div class="brand"><i data-icon="sword"></i><span>Study Knight</span></div>
+    <div class="titlebar-actions">
+      <button class="tb-btn" id="miniBtn" title="Mini mode, always on top (M)" aria-label="Toggle mini mode"><i data-icon="mini"></i></button>
+      <button class="tb-btn" id="planBtn" title="Plan, stats & scenery" aria-label="Open plan, stats and scenery"><i data-icon="scroll"></i></button>
+    </div>
+  </header>
+
+  <section class="hud frame" id="hud">
+    <div class="ribbon" id="ribbon">
+      <span class="ribbon-icon" id="phaseIcon"></span>
+      <span id="phase">Ready</span>
+    </div>
+    <span class="block-count" id="blockCount"></span>
+
+    <canvas class="digits" id="digits" aria-hidden="true"></canvas>
+    <div class="sr-only" id="timeText" aria-live="off"></div>
+    <div class="xp" id="xp" aria-hidden="true"></div>
+
+    <label class="quest">
+      <i data-icon="scroll"></i>
+      <input id="task" maxlength="80" placeholder="Name your quest…" spellcheck="false" aria-label="What are you studying?" />
+    </label>
+
+    <div class="controls">
+      <button class="pbtn primary" id="playBtn"><span class="pbtn-icon" id="playIcon"></span><span id="playLabel">Start</span></button>
+      <button class="pbtn square" id="skipBtn" title="Skip to next block (S)" aria-label="Skip to next block"><span id="skipIcon"></span><span id="skipLabel" class="skip-label"></span></button>
+      <button class="pbtn square" id="resetBtn" title="Reset plan" aria-label="Reset plan"><i data-icon="reset"></i></button>
+    </div>
+
+    <div class="trail" id="strip" aria-label="Journey: plan blocks"></div>
+  </section>
+
+  <aside class="drawer frame" id="drawer" aria-label="Plan, stats and scenery">
+    <div class="drawer-head">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="plan"><i data-icon="scroll"></i>Plan</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="scenery"><i data-icon="mountain"></i>Scenery</button>
+      </div>
+      <button class="tb-btn" id="closeDrawer" aria-label="Close"><i data-icon="close"></i></button>
+    </div>
+
+    <div class="panel" data-panel="plan">
+      <p class="lock-note" id="lockNote"><i data-icon="flag"></i>A journey is underway. Reset to change the plan.</p>
+
+      <h3 class="section">Method</h3>
+      <div class="methods" id="methods" role="radiogroup"></div>
+
+      <div class="builder" id="builder">
+        <div class="builder-rows" id="builderRows"></div>
+        <div class="builder-add">
+          <button class="pbtn mini" data-add="focus"><i data-icon="plus"></i>Focus</button>
+          <button class="pbtn mini" data-add="break"><i data-icon="plus"></i>Break</button>
+        </div>
+      </div>
+
+      <div class="options">
+        <div class="opt" id="roundsRow">
+          <div><span class="opt-name">Rounds</span><span class="opt-sub">Repeat the whole sequence</span></div>
+          <div class="stepper">
+            <button class="pbtn sq-sm" id="roundsDown" aria-label="Fewer rounds"><i data-icon="minus"></i></button>
+            <output id="rounds">1</output>
+            <button class="pbtn sq-sm" id="roundsUp" aria-label="More rounds"><i data-icon="plus"></i></button>
+          </div>
+        </div>
+        <label class="opt" for="autoStart">
+          <div><span class="opt-name">Auto-start</span><span class="opt-sub">Roll straight into the next block</span></div>
+          <input type="checkbox" class="switch" id="autoStart" checked />
+        </label>
+      </div>
+      <p class="plan-total" id="planTotal"></p>
+
+      <h3 class="section">Journey log</h3>
+      <div class="stats">
+        <div class="stat"><i data-icon="hourglass"></i><span id="statToday">0m</span><small>today</small></div>
+        <div class="stat"><i data-icon="calendar"></i><span id="statWeek">0m</span><small>7 days</small></div>
+        <div class="stat"><i data-icon="flame"></i><span id="statStreak">0</span><small>day streak</small></div>
+      </div>
+      <div class="week" id="week"></div>
+    </div>
+
+    <div class="panel" data-panel="scenery" hidden>
+      <h3 class="section">Hero</h3>
+      <div class="cards chars" id="charCards"></div>
+
+      <h3 class="section">Focus scene <small>while you study</small></h3>
+      <div class="cards bgs" id="focusCards"></div>
+      <div class="chips" id="focusPhases"></div>
+
+      <h3 class="section">Break scene <small>at camp</small></h3>
+      <div class="cards bgs" id="restCards"></div>
+      <div class="chips" id="restPhases"></div>
+
+      <h3 class="section">Your packs</h3>
+      <div id="packTools">
+        <p class="hint">A folder with <code>idle.png</code> + <code>run.png</code> strips becomes a hero. A folder of
+          layer images (back to front) becomes a scene. The README covers <code>manifest.json</code>.</p>
+        <div class="builder-add">
+          <button class="pbtn mini" id="importPack"><i data-icon="folder"></i>Import folder…</button>
+          <button class="pbtn mini" id="openPacks">Open folder</button>
+          <button class="pbtn mini" id="reloadPacks" title="Re-read the packs folder"><i data-icon="reset"></i>Reload</button>
+        </div>
+        <ul class="pack-list" id="packList"></ul>
+      </div>
+      <p class="hint error" id="packError" role="alert"></p>
+    </div>
+
+    <p class="credits">
+      Art: Meow Knight · Four Skies · Glacial Mountains by Vicente Nitti
+      (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>)
+      · Fonts: VT323, Jersey 10, Tiny5 (OFL)
+    </p>
+  </aside>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
