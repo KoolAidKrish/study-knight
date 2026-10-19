@@ -1,8 +1,12 @@
 # Study Knight
 
-A desktop study timer. While you focus, a little knight runs through the mountains and the sky moves
-from sunrise to noon, sunset and night over your whole plan. On breaks he makes camp by a fire in the
-glacial peaks.
+A cute little study app to motivate you to stay focused for longer! 
+Every second you study gets your companion one step closer to his 
+destination!
+
+How to run:
+
+Download the repo then in terminal
 
 ```
 npm install
@@ -34,15 +38,6 @@ Rounds repeat the whole sequence. "Auto-start next block" chains blocks without 
 - The renderer also runs in a plain browser (`python -m http.server -d src`); mini mode and native
   notifications only work in the desktop app.
 
-## Scenery
-
-Open the drawer (☰) → **Scenery** to pick:
-
-- **Character**: Meow Knight plus palette swaps (Ginger, Paladin, Rose, Shadow) and any packs you add.
-- **Focus scene** and **Break scene**: chosen separately. A scene with several phases (Four Skies has
-  Sunrise / Noon / Sunset / Night) can be pinned to one phase or set to **Day cycle**, which moves through
-  every phase over the length of your plan. Scenes with no ground of their own (Glacial Mountains) get a
-  stone ridge to run on and an outcrop for the campfire.
 
 ### Custom packs (desktop app)
 
