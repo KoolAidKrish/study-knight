@@ -1,8 +1,12 @@
 # Study Knight
 
-A desktop study timer. While you focus, a little knight runs through the mountains and the sky moves
-from sunrise to noon, sunset and night over your whole plan. On breaks he makes camp by a fire in the
-glacial peaks.
+A cute little study app to motivate you to stay focused for longer! 
+Every second you study gets your companion one step closer to his 
+destination!
+
+How to run:
+
+Download the repo then in terminal
 
 ```
 npm install
