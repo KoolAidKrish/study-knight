@@ -71,6 +71,7 @@ export class Timer extends EventTarget {
   constructor() {
     super();
     this.lastSave = 0;
+    this.remote = false;   // true while a party host drives this timer; we only display it
     this.booting = true;   // don't overwrite a saved session before restore() reads it
     this.reset({ presetId: 'descending', rounds: 1, custom: [f(45), b(10)] });
   }
@@ -162,7 +163,7 @@ export class Timer extends EventTarget {
   }
 
   tick(autoStart) {
-    if (this.status !== 'running') return;
+    if (this.status !== 'running' || this.remote) return;
     if (Date.now() - this.lastSave > 5000) this.save();
     const rem = this.remaining();
     if (rem !== null && rem <= 0) this.finishSegment(Date.now(), autoStart, false);
@@ -207,12 +208,29 @@ export class Timer extends EventTarget {
   // ----- persistence: a session survives closing the app -----
 
   save() {
-    if (this.booting) return;
+    if (this.booting || this.remote) return;
     try {
       const { presetId, rounds, custom, segments, index, status, startedAt, banked, focusDone } = this;
       this.lastSave = Date.now();
       localStorage.setItem(STORE, JSON.stringify({ presetId, rounds, custom, segments, index, status, startedAt, banked, focusDone, savedAt: this.lastSave }));
     } catch {}
+  }
+
+  // ----- party sync: the host sends its plan with timestamps on the relay's clock -----
+
+  snapshot(toServer = (t) => t) {
+    const { presetId, rounds, custom, segments, index, status, banked, focusDone } = this;
+    return { presetId, rounds, custom, segments, index, status, banked, focusDone, startedAt: toServer(this.startedAt) };
+  }
+
+  applySnapshot(snap, toLocal = (t) => t) {
+    if (!snap) return;
+    Object.assign(this, {
+      presetId: snap.presetId, rounds: snap.rounds, custom: snap.custom, segments: snap.segments,
+      index: snap.index, status: snap.status, banked: snap.banked, focusDone: snap.focusDone,
+      startedAt: toLocal(snap.startedAt),
+    });
+    this.emit();
   }
 
   restore() {

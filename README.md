@@ -34,6 +34,21 @@ Rounds repeat the whole sequence. "Auto-start next block" chains blocks without 
 - The renderer also runs in a plain browser (`python -m http.server -d src`); mini mode and native
   notifications only work in the desktop app.
 
+## Party (LAN)
+
+Drawer (☰) → **Party**. One person clicks **Host a party** and gets a 4-letter code and their address;
+everyone else on the same network types that address and code into **Join**. The host's timer is
+shared: starting, pausing, skipping and changing the plan happen for everyone, members see it live
+(clock differences between machines are corrected on join), late joiners land in the current block, and
+each person's focus minutes still go into their own Journey log. If the host ends the party, members keep
+going solo from where it was.
+
+- Only the host controls the timer for now; party votes and everyone's heroes on screen come next.
+- The host's app listens on TCP port 47820 (or the next free one up to 47824). Windows asks to allow it
+  through the firewall the first time you host. Allow it on **private** networks.
+- Campus/office Wi-Fi often blocks device-to-device traffic. If joining fails there, a phone hotspot or
+  a shared Tailscale network works (the host card lists a Tailscale address when you have one).
+
 ## Scenery
 
 Open the drawer (☰) → **Scenery** to pick:

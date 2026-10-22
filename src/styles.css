@@ -287,9 +287,9 @@ body.drawer-open .drawer { transform: none; }
 
 .tabs { display: flex; gap: 6px; }
 .tab {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 6px;
   height: 36px;
-  padding: 0 8px;
+  padding: 0 5px;
   border: 6px solid transparent;
   border-image: var(--f-card) 3 fill / 6px stretch;
   background: none;
@@ -581,3 +581,64 @@ body.mini #skipBtn.wide .skip-label { display: none; }
   .drawer, .switch::after { transition: none; }
   .trail .pip, .trail .camp.now { animation: none; }
 }
+
+/* ---------- party ---------- */
+
+.party-pill {
+  display: flex; align-items: center; gap: 6px;
+  height: 24px;
+  margin-right: 4px;
+  padding: 0 6px;
+  border: 0;
+  background: rgba(7, 7, 15, 0.55);
+  box-shadow: 0 0 0 2px var(--outline), inset 0 0 0 1px rgba(127, 209, 199, 0.4);
+  color: var(--glacier);
+  font: 12px var(--label);
+  align-self: center;
+}
+.party-pill[hidden] { display: none; }
+.party-pill b { font: 18px/1 var(--head); color: var(--ink); }
+.party-pill:hover { color: var(--ink); }
+
+.pbtn.block { width: 100%; margin-top: 4px; }
+.pbtn svg { flex: none; }
+
+.join-row { display: flex; gap: 6px; }
+.join-row .quest { flex: 1; min-width: 0; }
+.join-row .quest.code { flex: 0 0 96px; }
+.join-row .quest.code input { text-transform: uppercase; letter-spacing: 0.2em; text-align: center; }
+.join-row + .pbtn { margin-top: 6px; }
+
+.party-card {
+  margin-top: 12px;
+  padding: 8px 12px 10px;
+  border: 6px solid transparent;
+  border-image: var(--f-card-on) 3 fill / 6px stretch;
+  text-align: center;
+}
+.party-card small { font: 10px var(--label); text-transform: uppercase; color: var(--ember-light); }
+.party-card strong {
+  display: block;
+  font: 56px/1 var(--head);
+  letter-spacing: 0.18em;
+  color: var(--ink);
+  text-shadow: 3px 3px 0 var(--outline);
+}
+.party-card p { margin: 6px 0 0; font-size: 17px; color: var(--ink-dim); }
+.party-card code { font: 18px var(--px); color: var(--glacier); user-select: text; }
+
+.party-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.party-list li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px;
+  background: rgba(7, 7, 15, 0.35);
+  box-shadow: inset 3px 0 0 var(--ink-mute);
+  font: 21px/1 var(--head);
+}
+.party-list li svg { color: var(--ink-dim); }
+.party-list li.is-host { box-shadow: inset 3px 0 0 var(--gold); }
+.party-list li.is-host svg { color: var(--gold); }
+.party-list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.party-list li small { font: 10px var(--label); text-transform: uppercase; color: var(--ember-light); }
+.party-card .also { display: block; margin-top: 4px; font-size: 15px; color: var(--ink-mute); }
+.party-card .also code { font-size: 15px; color: var(--ink-dim); }

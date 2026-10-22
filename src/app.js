@@ -2,6 +2,7 @@ import { Scene } from './scene.js';
 import { Timer, PRESETS } from './timer.js';
 import { initScenery } from './scenery.js';
 import { icon, hydrateIcons, installFrames } from './pixels.js';
+import { initParty } from './party-ui.js';
 
 installFrames();
 hydrateIcons();
@@ -21,6 +22,7 @@ const stats = load(STATS, { days: {} });
 const scene = new Scene($('scene'));
 const timer = new Timer();
 timer.restore();
+let party = null;   // set once the Party tab is wired up below
 
 // ---------------- pixel digits ----------------
 
@@ -192,13 +194,18 @@ function render() {
   setHTML('skipLabel', flowFocus ? 'Rest' : '');
   skipBtn.setAttribute('aria-label', flowFocus ? 'Take a break' : 'Skip to next block');
   skipBtn.title = flowFocus ? 'Take a break now (S)' : 'Skip to next block (S)';
-  skipBtn.disabled = st === 'done' || (flowFocus && st === 'ready');
+  skipBtn.disabled = st === 'done' || (flowFocus && st === 'ready') || isMember();
+  // In a party only the host drives the timer.
+  playBtn.disabled = isMember();
+  $('resetBtn').disabled = isMember();
+  playBtn.title = isMember() ? 'The host controls the timer' : '';
 
   renderXp(now);
   renderStrip(now);
   scene.setMode(sceneMode());
   scene.setSkyProgress(st === 'done' ? 1 : timer.progress(now));
-  document.body.classList.toggle('locked', !(st === 'ready' || st === 'done'));
+  document.body.classList.toggle('locked', !(st === 'ready' || st === 'done') || isMember());
+  setHTML('lockText', isMember() ? 'The party host picks the plan.' : 'A journey is underway. Reset to change the plan.');
 }
 
 function setHTML(id, html) {
@@ -250,9 +257,10 @@ function renderStrip(now) {
   setHTML('strip', html);
 }
 
-playBtn.addEventListener('click', () => timer.toggle());
-skipBtn.addEventListener('click', () => timer.skip(prefs.autoStart));
+playBtn.addEventListener('click', () => { if (!isMember()) timer.toggle(); });
+skipBtn.addEventListener('click', () => { if (!isMember()) timer.skip(prefs.autoStart); });
 $('resetBtn').addEventListener('click', () => {
+  if (isMember()) return;
   // count partial focus before throwing the session away
   if (timer.current.type === 'focus' && (timer.status === 'running' || timer.status === 'paused')) {
     timer.dispatchEvent(new CustomEvent('focuslogged', { detail: { ms: timer.elapsed() } }));
@@ -365,11 +373,13 @@ const toggleDrawer = (open = !document.body.classList.contains('drawer-open')) =
   if (open) renderStats();
 };
 $('planBtn').addEventListener('click', () => toggleDrawer());
+function showTab(name) {
+  for (const t of document.querySelectorAll('.tab')) t.setAttribute('aria-selected', t.dataset.tab === name);
+  for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== name;
+}
 document.querySelector('.tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');
-  if (!tab) return;
-  for (const t of document.querySelectorAll('.tab')) t.setAttribute('aria-selected', t === tab);
-  for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== tab.dataset.tab;
+  if (tab) showTab(tab.dataset.tab);
 });
 $('closeDrawer').addEventListener('click', () => toggleDrawer(false));
 
@@ -386,12 +396,25 @@ $('miniBtn').addEventListener('click', () => setMini(!document.body.classList.co
 // ---------------- keyboard ----------------
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.matches('input')) return;
-  if (e.code === 'Space') { e.preventDefault(); timer.toggle(); }
+  if (e.target.matches?.('input')) return;
+  if (e.code === 'Space') { e.preventDefault(); if (!isMember()) timer.toggle(); }
   else if (e.key === 's' || e.key === 'S') { if (!skipBtn.disabled) timer.skip(prefs.autoStart); }
   else if (e.key === 'm' || e.key === 'M') setMini(!document.body.classList.contains('mini'));
   else if (e.key === 'Escape') toggleDrawer(false);
 });
+
+// ---------------- party ----------------
+
+party = initParty({
+  timer,
+  prefs,
+  savePrefs: () => store(PREFS, prefs),
+  onPlanChange: () => renderMethods(),
+  openPartyTab: () => { showTab('party'); toggleDrawer(true); },
+});
+function isMember() {
+  return party?.role === 'member';
+}
 
 // ---------------- boot ----------------
 

@@ -9,4 +9,8 @@ contextBridge.exposeInMainWorld('desktop', {
     open: () => ipcRenderer.invoke('packs:open'),
     remove: (id) => ipcRenderer.invoke('packs:remove', id),
   },
+  party: {
+    host: () => ipcRenderer.invoke('party:host'),
+    stop: () => ipcRenderer.invoke('party:stop'),
+  },
 });

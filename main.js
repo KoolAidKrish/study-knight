@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Notification, dialog, shell } = require('electron');
 const path = require('path');
 const packs = require('./packs-main');
+const party = require('./party-server');
 
 const FULL = { width: 1100, height: 680 };
 const MINI = { width: 380, height: 214 };
@@ -59,7 +60,12 @@ ipcMain.handle('packs:open', () => shell.openPath(packsRoot()));
 // Removed packs go to the Recycle Bin, not straight to deletion.
 ipcMain.handle('packs:remove', (_e, id) => shell.trashItem(packs.packDir(packsRoot(), id)));
 
+// LAN party: the host's window starts the relay, then connects to it like everyone else.
+ipcMain.handle('party:host', () => party.start());
+ipcMain.handle('party:stop', () => party.stop());
+
 app.setAppUserModelId('dev.ktiwari.studyknight');
 app.whenReady().then(createWindow);
 app.on('browser-window-focus', () => win && win.flashFrame(false));
 app.on('window-all-closed', () => app.quit());
+app.on('before-quit', () => { party.stop(); });

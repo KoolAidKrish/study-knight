@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws:" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Study Knight</title>
   <link rel="stylesheet" href="styles.css" />
@@ -13,6 +13,7 @@
   <header class="titlebar">
     <div class="brand"><i data-icon="sword"></i><span>Study Knight</span></div>
     <div class="titlebar-actions">
+      <button class="party-pill" id="partyPill" hidden></button>
       <button class="tb-btn" id="miniBtn" title="Mini mode, always on top (M)" aria-label="Toggle mini mode"><i data-icon="mini"></i></button>
       <button class="tb-btn" id="planBtn" title="Plan, stats & scenery" aria-label="Open plan, stats and scenery"><i data-icon="scroll"></i></button>
     </div>
@@ -48,12 +49,13 @@
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" aria-selected="true" data-tab="plan"><i data-icon="scroll"></i>Plan</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="scenery"><i data-icon="mountain"></i>Scenery</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="party"><i data-icon="party"></i>Party</button>
       </div>
       <button class="tb-btn" id="closeDrawer" aria-label="Close"><i data-icon="close"></i></button>
     </div>
 
     <div class="panel" data-panel="plan">
-      <p class="lock-note" id="lockNote"><i data-icon="flag"></i>A journey is underway. Reset to change the plan.</p>
+      <p class="lock-note" id="lockNote"><i data-icon="flag"></i><span id="lockText">A journey is underway. Reset to change the plan.</span></p>
 
       <h3 class="section">Method</h3>
       <div class="methods" id="methods" role="radiogroup"></div>
@@ -89,6 +91,37 @@
         <div class="stat"><i data-icon="flame"></i><span id="statStreak">0</span><small>day streak</small></div>
       </div>
       <div class="week" id="week"></div>
+    </div>
+
+    <div class="panel" data-panel="party" hidden>
+      <div id="partySolo">
+        <h3 class="section">Your name</h3>
+        <label class="quest"><i data-icon="sword"></i><input id="partyName" maxlength="24" placeholder="Knight" spellcheck="false" aria-label="Your name in the party" /></label>
+
+        <h3 class="section">Host</h3>
+        <p class="hint">Start a party on this computer. Friends on the same Wi-Fi join with your address and code.</p>
+        <button class="pbtn primary block" id="hostBtn"><i data-icon="crown"></i>Host a party</button>
+
+        <h3 class="section">Join</h3>
+        <div class="join-row">
+          <label class="quest"><input id="joinAddr" placeholder="Host address, e.g. 192.168.1.23" spellcheck="false" aria-label="Host address" /></label>
+          <label class="quest code"><input id="joinCode" maxlength="4" placeholder="CODE" spellcheck="false" aria-label="Party code" /></label>
+        </div>
+        <button class="pbtn block" id="joinBtn"><i data-icon="party"></i>Join party</button>
+      </div>
+
+      <div id="partyLive" hidden>
+        <div class="party-card">
+          <small>Party code</small>
+          <strong id="partyCode"></strong>
+          <p id="partyAddr"></p>
+        </div>
+        <h3 class="section">Adventurers <small id="partyCount"></small></h3>
+        <ul class="party-list" id="partyMembers"></ul>
+        <p class="hint" id="partyRole"></p>
+        <button class="pbtn block" id="leaveBtn"><i data-icon="close"></i><span id="leaveLabel">Leave party</span></button>
+      </div>
+      <p class="hint error" id="partyError" role="alert"></p>
     </div>
 
     <div class="panel" data-panel="scenery" hidden>
